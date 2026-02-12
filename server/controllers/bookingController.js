@@ -13,33 +13,68 @@ const checkAvailability = async (car, pickupDate, returnDate) => {
 }
 
 
+// export const checkAvailabilityOfCar = async (req, res) => {
+//     try{
+//        const {location, pickupDate, returnDate} = req.body;
+//        console.log(location, pickupDate, returnDate);
+
+//        // fetch all available cars for the given location
+//        const cars = await Car.find({location, isAvailable:true})
+//        console.log('Not Working')
+
+//        // check car availability for the given date range using promise
+//        const availableCarsPromises = cars.map(async(car)=>{
+//         const isAvailable = await checkAvailability(car._id, pickupDate, returnDate)
+//         return {...car._doc, isAvailable: isAvailable}
+//        })
+
+//        let availableCars = await Promise.all(availableCarsPromises);
+//        availableCars = availableCars.filter(car => car.isAvailable === true)
+//        console.log(availableCars)
+//        console.log('No Cars')
+
+//        res.json({success:true, availableCars})
+
+//     } catch (error) {
+//         console.log(error.message)
+//         return res.json({success:true, message:error.message})
+//     }
+// }
+
 export const checkAvailabilityOfCar = async (req, res) => {
-    try{
-       const {location, pickupDate, returnDate} = req.body;
-       console.log(location, pickupDate, returnDate);
+  try {
+    const { location, pickupDate, returnDate } = req.body;
 
-       // fetch all available cars for the given location
-       const cars = await Car.find({location, isAvailable:true})
-       console.log('Not Working')
+    const pickup = new Date(pickupDate)
+    const returned = new Date(returnDate)
 
-       // check car availability for the given date range using promise
-       const availableCarsPromises = cars.map(async(car)=>{
-        const isAvailable = await checkAvailability(car._id, pickupDate, returnDate)
-        return {...car._doc, isAvailable: isAvailable}
-       })
+    // Find cars by location (case insensitive)
+    const cars = await Car.find({
+      location: { $regex: new RegExp(location, "i") },
+      isAvailable: true
+    });
 
-       let availableCars = await Promise.all(availableCarsPromises);
-       availableCars = availableCars.filter(car => car.isAvailable === true)
-       console.log(availableCars)
-       console.log('No Cars')
+    const availableCarsPromises = cars.map(async (car) => {
+      const bookings = await Booking.find({
+        car: car._id,
+        pickupDate: { $lte: returned },
+        returnDate: { $gte: pickup },
+      });
 
-       res.json({success:true, availableCars})
+      return bookings.length === 0 ? car : null;
+    });
 
-    } catch (error) {
-        console.log(error.message)
-        return res.json({success:true, message:error.message})
-    }
-}
+    let availableCars = await Promise.all(availableCarsPromises);
+    availableCars = availableCars.filter(car => car !== null);
+
+    res.json({ success: true, availableCars });
+
+  } catch (error) {
+    console.log(error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
+
 
 
 export const createBooking = async (req, res) => {
