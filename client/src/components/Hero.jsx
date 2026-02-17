@@ -5,6 +5,14 @@ import { useAppContext } from '../context/AppContext'
 const Hero = () => {
     const [pickupLocation, setPickupLocation] = useState("")
 
+    const today = new Date();
+const tomorrow = new Date();
+tomorrow.setDate(today.getDate() + 1);
+
+const todayFormatted = today.toISOString().split("T")[0];
+const tomorrowFormatted = tomorrow.toISOString().split("T")[0];
+
+
     const {pickupDate, setPickupDate, returnDate, setReturnDate, navigate} = useAppContext()
 
     const handleSearch = (e) => {
@@ -28,11 +36,32 @@ const Hero = () => {
                </div>
                 <div className='flex flex-col items-start gap-2'>
                 <label htmlFor="pickup-date">Pick-up date</label>
-                <input value={pickupDate} onChange={e=> setPickupDate(e.target.value)} type="date" id="pickup-date" min={new Date().toISOString().split('T')[0]} className='text-sm text-gray-500' required />
+                {/* <input value={pickupDate} onChange={e=> setPickupDate(e.target.value)} type="date" id="pickup-date" min={new Date().toISOString().split('T')[0]} className='text-sm text-gray-500' required /> */}
+                <input 
+  value={pickupDate}
+  onChange={e=> setPickupDate(e.target.value)}
+  type="date"
+  id="pickup-date"
+  min={todayFormatted}
+  className='text-sm text-gray-500'
+  required 
+/>
+
                </div>
                 <div className='flex flex-col items-start gap-2'>
                 <label htmlFor="return-date">Return Date</label>
-                <input value={returnDate} onChange={e=> setReturnDate(e.target.value)} type="date" id="return-date" className='text-sm text-gray-500' required />
+                {/* <input value={returnDate} onChange={e=> setReturnDate(e.target.value)} type="date" id="return-date" className='text-sm text-gray-500' required /> */}
+
+                <input 
+  value={returnDate}
+  onChange={e=> setReturnDate(e.target.value)}
+  type="date"
+  id="return-date"
+  min={pickupDate ? pickupDate : tomorrowFormatted}
+  className='text-sm text-gray-500'
+  required 
+/>
+
                </div>
                
            </div>
